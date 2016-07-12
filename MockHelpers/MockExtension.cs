@@ -19,60 +19,64 @@ namespace MockDbContextTests
 		/// <summary>
 		/// Creates a mocked generic DbSet of type passed in based on the data supplied
 		/// </summary>
-		/// <param name="data">The data to emulate in the set</param>
-		/// <returns></returns>
-		public static DbSet<T> GenerateMockDbSet<T>(this IEnumerable<T> data) where T : class
+		/// <param name="queryableEnumerable">The data to emulate in the set</param>
+		/// <returns>A mocked DbSet using NSubstitute</returns>
+		public static DbSet<TEntity> GenerateMockDbSet<TEntity>(this IEnumerable<TEntity> queryableEnumerable) where TEntity : class
 		{
-			return data.AsQueryable().GenerateMockDbSet();
-		}
+			var queryable = queryableEnumerable as IQueryable<TEntity> ?? queryableEnumerable.AsQueryable();
 
-		/// <summary>
-		/// Creates a mocked generic DbSet of type passed in based on the data supplied
-		/// </summary>
-		/// <param name="data">The data to emulate in the set</param>
-		/// <returns></returns>
-		public static DbSet<T> GenerateMockDbSet<T>(this IQueryable<T> data) where T : class
-		{
-			var mockSet = Substitute.For<DbSet<T>, IQueryable<T>>();
-			var castMockSet = (IQueryable<T>)mockSet;
+			var mockSet = Substitute.For<DbSet<TEntity>, IQueryable<TEntity>>();
+			var castMockSet = (IQueryable<TEntity>)mockSet;
 
-			castMockSet.Provider.Returns(data.Provider);
-			castMockSet.Expression.Returns(data.Expression);
-			castMockSet.ElementType.Returns(data.ElementType);
-			castMockSet.GetEnumerator().Returns(data.GetEnumerator());
+			castMockSet.Provider.Returns(queryable.Provider);
+			castMockSet.Expression.Returns(queryable.Expression);
+			castMockSet.ElementType.Returns(queryable.ElementType);
+			castMockSet.GetEnumerator().Returns(queryable.GetEnumerator());
 			return mockSet;
-		}
-
-		/// <summary>
-		/// Creates a mocked generic DbSet of type passed in based on the data supplied
-		/// </summary>
-		/// <param name="data">The data to emulate in the set</param>
-		/// <returns></returns>
-		public static DbSet<T> GenerateMockDbSetForAsync<T>(this IEnumerable<T> data) where T : class
-		{
-			return data.AsQueryable().GenerateMockDbSetForAsync();
 		}
 
 		/// <summary>
 		/// Generates a mock/fake dbset that can be called using the async keyword
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="queryable">The queryable.</param>
-		public static DbSet<T> GenerateMockDbSetForAsync<T>(this IQueryable<T> queryable) where T : class
+		/// <typeparam name="TEntity"></typeparam>
+		/// <param name="queryableEnumerable">The queryable.</param>
+		public static DbSet<TEntity> GenerateMockDbSetForAsync<TEntity>(this IEnumerable<TEntity> queryableEnumerable) where TEntity : class
 		{
-			var mockSet = Substitute.For<DbSet<T>, IQueryable<T>, IDbAsyncEnumerable<T>>();
+			var queryable = queryableEnumerable as IQueryable<TEntity> ?? queryableEnumerable.AsQueryable();
+
+			var mockSet = Substitute.For<DbSet<TEntity>, IQueryable<TEntity>, IDbAsyncEnumerable<TEntity>>();
 
 			// async support
-			var castMockSet = (IQueryable<T>)mockSet;
-			var castAsyncEnum = (IDbAsyncEnumerable<T>)mockSet;
-			castAsyncEnum.GetAsyncEnumerator().Returns(new TestDbAsyncEnumerator<T>(queryable.GetEnumerator()));
-			castMockSet.Provider.Returns(new TestDbAsyncQueryProvider<T>(queryable.Provider));
+			var castMockSet = (IQueryable<TEntity>)mockSet;
+			var castAsyncEnum = (IDbAsyncEnumerable<TEntity>)mockSet;
+			castAsyncEnum.GetAsyncEnumerator().Returns(new TestDbAsyncEnumerator<TEntity>(queryable.GetEnumerator()));
+			castMockSet.Provider.Returns(new TestDbAsyncQueryProvider<TEntity>(queryable.Provider));
 
 			castMockSet.Expression.Returns(queryable.Expression);
 			castMockSet.ElementType.Returns(queryable.ElementType);
 			castMockSet.GetEnumerator().Returns(queryable.GetEnumerator());
 
 			return mockSet;
+		}
+		/// <summary>
+		/// Adds the IEnumerable parameter to the DbContext Set (of type DbSet) that can be used using asynchronous calls
+		/// </summary>
+		/// <param name="context">The context to add the IEnumerable parameter to.</param>
+		/// <param name="queryableEnumerable">The enumerable object to add as a DbSet.</param>
+		public static void AddToDbSetForAsync<TEntity>(this DbContext context, IEnumerable<TEntity> queryableEnumerable) where TEntity : class
+		{
+			var set = queryableEnumerable.GenerateMockDbSetForAsync();
+			context.Set<TEntity>().Returns(set);
+		}
+		/// <summary>
+		/// Adds the IEnumerable parameter to the DbContext Set (of type DbSet) (can not be used using asynchronous calls)
+		/// </summary>
+		/// <param name="context">The context to add the IEnumerable parameter to.</param>
+		/// <param name="queryableEnumerable">The enumerable object to add as a DbSet.</param>
+		public static void AddToDbSet<TEntity>(this DbContext context, IEnumerable<TEntity> queryableEnumerable) where TEntity : class
+		{
+			var set = queryableEnumerable.GenerateMockDbSetForAsync();
+			context.Set<TEntity>().Returns(set);
 		}
 	}
 }

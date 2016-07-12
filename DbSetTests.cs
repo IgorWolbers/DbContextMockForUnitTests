@@ -3,7 +3,6 @@ using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NSubstitute;
 
 namespace MockDbContextTests
 {
@@ -24,12 +23,10 @@ namespace MockDbContextTests
 				new MyEntity(){Id = 3, Name = "Entity C"},
 				new MyEntity(){Id = 4, Name = "Entity D"}
 			};
-			// call extension method
-			var dbSet = data.GenerateMockDbSet();
 			// create dbContext - this could be any derived class from DbContext
 			var dbContext = NSubstitute.Substitute.For<DbContext>();
-			// assign my mock data set
-			dbContext.Set<MyEntity>().Returns(dbSet);
+			// assign my mock data set using the extension method
+			dbContext.AddToDbSet(data);
 
 			// act
 			var result = dbContext.Set<MyEntity>().Where(x => x.Id > 2).OrderBy(x => x.Id).ToList();
@@ -51,12 +48,10 @@ namespace MockDbContextTests
 				new MyEntity(){Id = 4, Name = "Entity D"}
 			};
 			
-			// call extension method for asynchronous capable dbset
-			var dbSet = data.GenerateMockDbSetForAsync();
 			// create dbContext - this could be any derived class from DbContext
 			var dbContext = NSubstitute.Substitute.For<DbContext>();
-			// assign my mock data set
-			dbContext.Set<MyEntity>().Returns(dbSet);
+			// assign my mock data set using the extension method
+			dbContext.AddToDbSetForAsync(data);
 
 			// act - use await and call ToListAsync
 			var result = await dbContext.Set<MyEntity>().Where(x => x.Id > 2).OrderBy(x => x.Id).ToListAsync();

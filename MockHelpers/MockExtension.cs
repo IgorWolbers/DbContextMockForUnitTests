@@ -9,11 +9,6 @@ namespace MockDbContextTests
 	/// <summary>
 	/// Extensions to generate DbSets
 	/// </summary>
-	/// <remarks>
-	/// Original code taken from here
-	/// https://msdn.microsoft.com/en-us/data/dn314431.aspx
-	/// And then refactored into extensions
-	/// </remarks>
 	public static class MockExtension
 	{
 		/// <summary>

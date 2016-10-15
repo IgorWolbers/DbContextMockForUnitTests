@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Linq.Expressions;
 using NSubstitute;
 
 namespace MockDbContextTests
@@ -27,10 +29,12 @@ namespace MockDbContextTests
 			castMockSet.Expression.Returns(queryable.Expression);
 			castMockSet.ElementType.Returns(queryable.ElementType);
 			castMockSet.GetEnumerator().Returns(queryable.GetEnumerator());
-			return mockSet;
+            castMockSet.AsNoTracking().Returns(castMockSet);
+            mockSet.Include(Arg.Any<string>()).Returns(mockSet);
+            return mockSet;
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// Generates a mock/fake dbset that can be called using the async keyword
 		/// </summary>
 		/// <typeparam name="TEntity"></typeparam>
@@ -50,8 +54,10 @@ namespace MockDbContextTests
 			castMockSet.Expression.Returns(queryable.Expression);
 			castMockSet.ElementType.Returns(queryable.ElementType);
 			castMockSet.GetEnumerator().Returns(queryable.GetEnumerator());
+            castMockSet.AsNoTracking().Returns(castMockSet);
+            mockSet.Include(Arg.Any<string>()).Returns(mockSet);
 
-			return mockSet;
+            return mockSet;
 		}
 		/// <summary>
 		/// Adds the IEnumerable parameter to the DbContext Set (of type DbSet) that can be used using asynchronous calls
@@ -73,5 +79,14 @@ namespace MockDbContextTests
 			var set = queryableEnumerable.GenerateMockDbSetForAsync();
 			context.Set<TEntity>().Returns(set);
 		}
-	}
+
+        /// <summary>
+        /// Mocks the include.
+        /// </summary>
+        public static IQueryable<T> MockInclude<T, TProperty>(this IQueryable<T> source, Expression<Func<T, TProperty>> path)
+        {
+            source.Include(path).Returns(source);
+            return source;
+        }
+    }
 }

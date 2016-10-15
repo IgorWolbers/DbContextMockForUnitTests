@@ -44,10 +44,10 @@ public async Task AsynchronousTest1()
 	// arrange
 	var data = new List<MyEntity>()
 	{
-		new MyEntity(){Id = 1, Name = "Entity A"},
-		new MyEntity(){Id = 2, Name = "Entity B"},
-		new MyEntity(){Id = 3, Name = "Entity C"},
-		new MyEntity(){Id = 4, Name = "Entity D"}
+		new MyEntity() {Id = 1, Name = "Entity A", Relations = new List<MyRelatedPropertyEntity>() {new MyRelatedPropertyEntity {Id = 1, Name = "one"}}},
+		new MyEntity() {Id = 2, Name = "Entity B", Relations = new List<MyRelatedPropertyEntity>() {new MyRelatedPropertyEntity {Id = 54, Name = "two"}}},
+		new MyEntity() {Id = 3, Name = "Entity C", Relations = new List<MyRelatedPropertyEntity>() {new MyRelatedPropertyEntity {Id = 51, Name = "three"}}},
+		new MyEntity() {Id = 4, Name = "Entity D", Relations = new List<MyRelatedPropertyEntity>() {new MyRelatedPropertyEntity {Id = 321, Name = "four"}}}
 	};
 	
 	// create dbContext - this could be any derived class from DbContext
@@ -55,6 +55,9 @@ public async Task AsynchronousTest1()
 
 	// assign my mock data set using the extension method
 	dbContext.AddToDbSetForAsync(data);
+
+	// include the relations property
+	dbContext.Set<MyEntity>().MockInclude(x => x.Relations);
 
 	// act - use await and call ToListAsync. Typically this would be executed from inside some other Type that is being tested
 	var result = await dbContext.Set<MyEntity>().Where(x => x.Id > 2).OrderBy(x => x.Id).ToListAsync();
